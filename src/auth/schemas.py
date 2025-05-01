@@ -72,15 +72,8 @@ class UserCreate(BaseModel):
     second_name: str
     email: EmailStr
     phone_number: str
-    password: Optional[str] = None
+    password: str
     role: Optional[str] = None
-
-    @field_validator("password")
-    def hash(cls, value: Optional[str]) -> Optional[str]:
-        """Хэшировать пароль пользователя, если он указан."""
-        if value is not None:
-            return hash_password(str(value))
-        return value
 
 
 class UserRegisterResponse(BaseModel):

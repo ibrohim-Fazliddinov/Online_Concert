@@ -1,10 +1,11 @@
-from pydantic import BaseModel, ConfigDict
 from pydantic.types import conint, constr
+from pydantic import BaseModel, ConfigDict
+
 
 PrimaryKey = conint(gt=0, lt=2147483647)
 NameStr = constr(regex=r"^(?!\s*$).+", strip_whitespace=True, min_length=3)
 
-from pydantic import BaseModel, ConfigDict
+
 
 class ConcertBase(BaseModel):
     """

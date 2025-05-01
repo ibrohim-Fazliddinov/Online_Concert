@@ -36,7 +36,6 @@ class ManagerUserPermission(BasePermission):
     def has_required_permission(self, request: Request):
         return self.role == UserRoles.manager
 
-
 class CustomerUserPermission(BasePermission):
 
     def has_required_permission(self, request: Request):

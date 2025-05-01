@@ -45,57 +45,11 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     first_name: Mapped[str] = mapped_column(String(50))
     second_name: Mapped[str] = mapped_column(String(50))
-    email: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(String(100), unique=True)
     phone_number: Mapped[str] = mapped_column(String(20), unique=True)
     role: Mapped[UserRoles] = mapped_column(Enum(UserRoles), default=UserRoles.client)
-    password: Mapped[str] = mapped_column(LargeBinary, nullable=False)
+    password: Mapped[str] = mapped_column(LargeBinary)
 
-    def verify_password(self, password: str) -> bool:
-        """
-        Проверяет, совпадает ли переданный пароль с сохраненным хешированным паролем.
-
-        Аргументы:
-            password (str): Пароль для проверки.
-
-        Возвращает:
-            bool: Возвращает True, если пароли совпадают, иначе False.
-        """
-        if not password or not self.password:
-            return False
-        return bcrypt.checkpw(password.encode("utf-8"), self.password)
-
-    def set_password(self, password: str) -> None:
-        """
-        Устанавливает новый пароль для пользователя, хешируя его перед сохранением.
-
-        Аргументы:
-            password (str): Пароль для установки.
-
-        Исключения:
-            ValueError: Если пароль пустой.
-        """
-        if not password:
-            raise ValueError("Password cannot be empty")
-        self.password = hash_password(password)
-
-    @property
-    def token(self):
-        """
-        Генерирует JWT токен для пользователя, который можно использовать для аутентификации.
-
-        Токен содержит email пользователя и время его истечения.
-
-        Возвращает:
-            str: Закодированный JWT токен.
-        """
-        now = datetime.now()
-        exp = (now + timedelta(seconds=86400)).timestamp()  # Время истечения токена - 24 часа
-        data = {
-            "exp": exp,
-            "email": self.email,
-        }
-        secret_key = os.getenv("JWT_SECRET", "default_secret")  # Получаем секретный ключ из переменной окружения
-        return jwt.encode(data, secret_key, algorithm="HS256")
 
 
 
