@@ -115,37 +115,6 @@ class Settings(BaseSettings):
             "class_": AsyncSession,
         }
 
-    # Настройки аутентификации
-    AUTH_URL: str = "api/auth"
-    TOKEN_TYPE: str = "Bearer"
-    TOKEN_EXPIRE_MINUTES: int = 1440
-    VERIFICATION_TOKEN_EXPIRE_MINUTES: int = 1440
-    TOKEN_ALGORITHM: str = "HS256"
-    TOKEN_SECRET_KEY: SecretStr
-    USER_INACTIVE_TIMEOUT: int = 900
-
-    # Настройки почты
-    SMTP_SERVER: str = "mail.ru"
-    SMTP_PORT: int = 587
-    SENDER_EMAIL: str = "noreply@equiply.ru"
-    SMTP_USERNAME: str = "admin"
-    SMTP_PASSWORD: SecretStr
-
-    # OAuth провайдеры
-    OAUTH_SUCCESS_REDIRECT_URI: str = "https://online_concert.com"
-    OAUTH_CALLBACK_BASE_URL: str = "api/oauth/{provider}/callback"
-    OAUTH_PROVIDERS: Dict[str, Dict[str, str | int]] = {
-        "google": {
-            "client_id": "",
-            "client_secret": "",
-            "auth_url": "https://accounts.google.com/o/oauth2/v2/auth",
-            "token_url": "https://oauth2.googleapis.com/token",
-            "user_info_url": "https://www.googleapis.com/oauth2/v2/userinfo",
-            "scope": "email profile",
-            "callback_url": "http://localhost:8000/api/v1/oauth/google/callback",
-        },
-    }
-
     model_config = SettingsConfigDict(
         env_file=env,
         env_file_encoding="utf-8",
