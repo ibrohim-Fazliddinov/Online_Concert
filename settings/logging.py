@@ -28,8 +28,9 @@ logging.config.dictConfig(config)
 import json
 import os
 from pathlib import Path
-from pydantic_settings import BaseSettings
+from pydantic_settings import  SettingsConfigDict
 from src.common.enum import ConcertEnum
+from src.common.settings import ConcertBaseSettings
 
 
 class LogFormat(ConcertEnum):
@@ -47,7 +48,7 @@ class LogLevel(ConcertEnum):
     CRITICAL = "CRITICAL"
 
 
-class LoggingSetting(BaseSettings):
+class LoggingSetting(ConcertBaseSettings):
     """
     Конфигурация логирования.
 
@@ -88,10 +89,11 @@ class LoggingSetting(BaseSettings):
         "message": "%(message)s",
     }
 
-    class Config:
-        """Настройки Pydantic для LoadingSetting."""
-        env_prefix = "LOG_"
+    # Настройки Pydantic для LoadingSetting.
+    model_config = SettingsConfigDict(
+        env_prefix = "LOG_",
         use_enum_values = True
+    )
 
     @property
     def formatter(self) -> str:

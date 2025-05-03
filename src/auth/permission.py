@@ -1,9 +1,7 @@
 from abc import ABC, abstractmethod
 from fastapi import HTTPException
 from starlette.requests import Request
-
-from rest_framework.status import HTTP_403_FORBIDDEN
-
+from starlette.status import HTTP_403_FORBIDDEN
 from src.auth.enum import UserRoles
 from src.auth.service import get_current_user
 

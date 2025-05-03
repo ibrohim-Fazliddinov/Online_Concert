@@ -2,7 +2,7 @@
 from typing import Optional, Any
 from pydantic import BaseModel, EmailStr, field_validator
 from src.auth.utils import hash_password, generate_password
-from src.common.schema_base import ConcertBase
+from src.common.schema import ConcertBase
 
 
 class UserBase(ConcertBase):

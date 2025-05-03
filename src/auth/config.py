@@ -18,10 +18,10 @@ auth/config.py
 
 from pydantic import SecretStr, AnyUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from settings.path import PathSettings
+from src.common.settings import ConcertBaseSettings
 
 
-class OAuthProviderSettings(BaseSettings):
+class OAuthProviderSettings(ConcertBaseSettings):
     """
     Конфигурация одного OAuth-провайдера.
 
@@ -83,8 +83,6 @@ class AuthSettings(BaseSettings):
         env_prefix (str): 'AUTH_'.
         case_sensitive (bool): False.
     """
-    # Путь к файлу окружения для AuthSettings
-    env_file: str = PathSettings.env_path
 
     # Базовый URL для auth-эндпоинтов
     AUTH_URL: str = "/api/auth"
@@ -111,8 +109,6 @@ class AuthSettings(BaseSettings):
 
     # Pydantic configuration
     model_config = SettingsConfigDict(
-        env_file=env_file,
-        env_file_encoding="utf-8",
-        case_sensitive=False,
+        **ConcertBaseSettings.model_config,
         env_prefix="AUTH_",
     )

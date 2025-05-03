@@ -1,16 +1,7 @@
-import os
-from datetime import datetime, timedelta
-import bcrypt
-import jwt
 from sqlalchemy import String, LargeBinary, Enum
-from sqlalchemy.orm import mapped_column, Mapped, DeclarativeBase
+from sqlalchemy.orm import mapped_column, Mapped
 from src.auth.enum import UserRoles
-from src.auth.utils import hash_password
-
-
-class Base(DeclarativeBase):
-    pass
-
+from src.common.model import Base
 
 
 class User(Base):

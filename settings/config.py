@@ -1,61 +1,23 @@
 """
-Settings.py
+Модуль: settings.py
 
-Модуль содержит класс `Settings` для конфигурации приложения через Pydantic `BaseSettings`.
-Все параметры могут быть заданы через переменные окружения, файл `.env`, либо брать значения по умолчанию.
+Этот модуль настраивает глобальные параметры приложения
+с использованием Pydantic BaseSettings.
 """
-from typing import Dict, Any
-import logging
-from pydantic import SecretStr, PostgresDsn
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from sqlalchemy.ext.asyncio import AsyncSession
-from settings.path import PathSettings
+from pydantic_settings import SettingsConfigDict
+from src.common.settings import ConcertBaseSettings
+from src.database import DatabaseSettings
 
-log = logging.getLogger(__name__)
-env = PathSettings.env_path
-
-
-class Settings(BaseSettings):
+class Settings(ConcertBaseSettings):
     """
-    Основные настройки приложения.
+    Pydantic-класс настроек основного приложения.
 
     Атрибуты:
-        TITLE (str): Название приложения.
+        TITLE (str): Заголовок приложения.
         DESCRIPTION (str): Описание приложения.
-        VERSION (str): Версия приложения.
-        HOST (str): Хост для сервера.
-        PORT (str): Порт для сервера.
-
-        POSTGRES_USER (str): Пользователь БД PostgreSQL.
-        POSTGRES_PASSWORD (SecretStr): Пароль пользователя БД (секрет).
-        POSTGRES_HOST (str): Хост базы данных (по умолчанию 'localhost').
-        POSTGRES_PORT (int): Порт базы (по умолчанию 5432).
-        POSTGRES_DB (str): Имя базы данных.
-
-        AUTH_URL (str): URL маршрута для аутентификации.
-        TOKEN_*: Параметры JWT-токенов (тип, алгоритм, время жизни).
-
-        SMTP_SERVER (str), SMTP_PORT (int), SENDER_EMAIL (str), SMTP_USERNAME (str), SMTP_PASSWORD (SecretStr):
-            Параметры SMTP для отправки почты.
-
-        OAUTH_PROVIDERS (Dict[str, Dict[str, str | int]]):
-            Конфигурация OAuth-провайдеров (Google и т.д.).
-
-    Свойства:
-        database_dsn -> PostgresDsn:
-            DSN для подключения к PostgreSQL через asyncpg.
-        database_url -> str:
-            Строка подключения для Alembic и других инструментов.
-        engine_params -> Dict[str, Any]:
-            Параметры для создания SQLAlchemy Engine.
-        session_params -> Dict[str, Any]:
-            Параметры для создания AsyncSession.
-
-    Конфигурация BaseSettings:
-        env_file (str): путь к файлу окружения, берётся из `PathSettings.env_path`.
-        env_file_encoding (str): 'utf-8'.
-        extra (str): 'allow' — разрешать дополнительные поля.
-        case_sensitive (bool): False — имена переменных нечувствительны к регистру.
+        VERSION (str): Текущая версия приложения.
+        HOST (str): Хост для запуска сервера.
+        PORT (str): Порт для запуска сервера.
     """
     TITLE: str = "Online_Concert"
     DESCRIPTION: str = "CONCERT.RU CLONE"
@@ -63,61 +25,26 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     PORT: str = "8000"
 
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: SecretStr
-    POSTGRES_HOST: str = "localhost"
-    POSTGRES_PORT: int = 5432
-    POSTGRES_DB: str
-
     @property
-    def database_dsn(self) -> PostgresDsn:
+    def db(self) -> DatabaseSettings:
         """
-        Конструирует DSN для подключения к PostgreSQL через asyncpg.
+        Создает экземпляр DatabaseSettings
+        на основе переменных окружения.
 
-        :return: Экземпляр PostgresDsn с заполненными параметрами.
+        Возвращает:
+            DatabaseSettings: Конфигурация для подключения к БД.
         """
-        return PostgresDsn.build(
-            scheme="postgresql+asyncpg",
-            username=self.POSTGRES_USER,
+        return DatabaseSettings(
+            user=self.POSTGRES_USER,
             password=self.POSTGRES_PASSWORD,
             host=self.POSTGRES_HOST,
             port=self.POSTGRES_PORT,
-            path=self.POSTGRES_DB,
+            db=self.POSTGRES_DB,
+            echo=True,
+            pool_size=10,
         )
 
-    @property
-    def database_url(self) -> str:
-        """
-        Возвращает строку подключения к базе данных для Alembic и других инструментов.
-        """
-        return str(self.database_dsn)
-
-    @property
-    def engine_params(self) -> Dict[str, Any]:
-        """
-        Параметры для создания SQLAlchemy Engine.
-
-        :return: Словарь дополнительных опций Engine.
-        """
-        return {"echo": True}
-
-    @property
-    def session_params(self) -> Dict[str, Any]:
-        """
-        Параметры для создания асинхронной сессии SQLAlchemy.
-
-        :return: Словарь с автокоммитом, autoflush, expiration и классом сессии.
-        """
-        return {
-            "autocommit": False,
-            "autoflush": False,
-            "expire_on_commit": False,
-            "class_": AsyncSession,
-        }
-
     model_config = SettingsConfigDict(
-        env_file=env,
-        env_file_encoding="utf-8",
-        extra="allow",
-        case_sensitive=False,
+        **ConcertBaseSettings.model_config,
+        extra="allow"
     )
