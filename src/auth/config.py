@@ -16,10 +16,18 @@ auth/config.py
 
 """
 
-from pydantic import SecretStr, AnyUrl
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from src.common.settings import ConcertBaseSettings
 
+
+
+class BaseAuthConfigSetting(ConcertBaseSettings):
+
+    model_config = SettingsConfigDict(
+        **ConcertBaseSettings.model_config,
+        env_prefix="AUTH_",
+    )
 
 class OAuthProviderSettings(ConcertBaseSettings):
     """
@@ -38,14 +46,13 @@ class OAuthProviderSettings(ConcertBaseSettings):
     """
     client_id: str
     client_secret: SecretStr
-    auth_url: AnyUrl
-    token_url: AnyUrl
-    user_info_url: AnyUrl
+    auth_url: str
+    token_url: str
+    user_info_url: str
     scope: str
-    callback_url: AnyUrl
+    callback_url: str
 
-
-class AuthSettings(BaseSettings):
+class AuthSettings(BaseAuthConfigSetting):
     """
     Основные настройки модуля аутентификации.
 
@@ -72,16 +79,6 @@ class AuthSettings(BaseSettings):
         AUTH_SMTP_USERNAME (str): Логин для SMTP.
         AUTH_SMTP_PASSWORD (SecretStr): Пароль для SMTP.
 
-        # OAuth-настройки
-        AUTH_OAUTH_SUCCESS_REDIRECT_URI (AnyUrl): URL редиректа при успешном OAuth.
-        AUTH_OAUTH_CALLBACK_BASE_URL (AnyUrl): Базовый шаблон callback-URL '/api/oauth/{provider}/callback'.
-        AUTH_OAUTH_GOOGLE (OAuthProviderSettings): Конфигурация Google OAuth-провайдера.
-
-    Конфигурация Pydantic BaseSettings (model_config):
-        env_file (Path): путь к .env, полученный через PathSettings.env_path.
-        env_file_encoding (str): 'utf-8'.
-        env_prefix (str): 'AUTH_'.
-        case_sensitive (bool): False.
     """
 
     # Базовый URL для auth-эндпоинтов
@@ -102,13 +99,13 @@ class AuthSettings(BaseSettings):
     AUTH_SMTP_USERNAME: str = "your_username"
     AUTH_SMTP_PASSWORD: SecretStr
 
+    # Pydantic configuration
+
+
+class OAut2Settings(BaseAuthConfigSetting):
     # OAuth
-    AUTH_OAUTH_SUCCESS_REDIRECT_URI: AnyUrl
-    AUTH_OAUTH_CALLBACK_BASE_URL: AnyUrl
+    AUTH_OAUTH_SUCCESS_REDIRECT_URI: str
+    AUTH_OAUTH_CALLBACK_BASE_URL: str
     AUTH_OAUTH_GOOGLE: OAuthProviderSettings
 
     # Pydantic configuration
-    model_config = SettingsConfigDict(
-        **ConcertBaseSettings.model_config,
-        env_prefix="AUTH_",
-    )

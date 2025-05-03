@@ -19,30 +19,16 @@ class User(Base):
         email (str): Электронная почта пользователя, уникальная.
         phone_number (str): Номер телефона пользователя, уникальный.
         password (bytes): Захешированный пароль пользователя.
-
-    Методы:
-        verify_password(password: str) -> bool:
-            Проверяет, совпадает ли переданный пароль с сохраненным хешированным паролем.
-
-        set_password(password: str) -> None:
-            Устанавливает новый пароль для пользователя, хешируя его перед сохранением.
-
-        token (property) -> str:
-            Генерирует JWT токен для пользователя, который можно использовать для аутентификации.
     """
     __tablename__ = "user_account"
     __table_args__ = {"schema": "user_core"}
 
-    id: Mapped[int] = mapped_column(primary_key=True)
     first_name: Mapped[str] = mapped_column(String(50))
     second_name: Mapped[str] = mapped_column(String(50))
     email: Mapped[str] = mapped_column(String(100), unique=True)
     phone_number: Mapped[str] = mapped_column(String(20), unique=True)
     role: Mapped[UserRoles] = mapped_column(Enum(UserRoles), default=UserRoles.client)
     password: Mapped[str] = mapped_column(LargeBinary)
-
-
-
 
 
 

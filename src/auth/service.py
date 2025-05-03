@@ -1,4 +1,3 @@
-from settings import logging
 from typing import Optional
 import jwt
 from fastapi.params import Depends
@@ -9,7 +8,7 @@ from src.auth.enum import UserRoles
 from src.auth.exception import credentials_exception
 from src.auth.schemas import UserBase, UserRegister, UserCreate
 from src.database import get_db
-
+import logging
 
 log = logging.getLogger(__name__)
 

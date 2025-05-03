@@ -16,7 +16,7 @@ class UserBase(ConcertBase):
     # TODO: добавить валидацию email и phone_number
 
 
-class UserLogin(BaseModel):
+class UserLogin(ConcertBase):
     """Схема для запроса авторизации пользователя."""
 
     email: EmailStr
@@ -47,7 +47,7 @@ class UserRead(UserBase):
     id: int
 
 
-class UserPasswordUpdate(BaseModel):
+class UserPasswordUpdate(ConcertBase):
     """Схема для запроса на обновление пароля пользователя."""
 
     current_password: str
@@ -65,7 +65,7 @@ class UserPasswordUpdate(BaseModel):
         return value
 
 
-class UserCreate(BaseModel):
+class UserCreate(ConcertBase):
     """Схема для создания нового пользователя."""
 
     first_name: str
@@ -76,7 +76,7 @@ class UserCreate(BaseModel):
     role: Optional[str] = None
 
 
-class UserRegisterResponse(BaseModel):
+class UserRegisterResponse(ConcertBase):
     """Схема для ответа при регистрации пользователя (с токеном)."""
 
     token: Optional[str] = None
