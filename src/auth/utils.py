@@ -1,12 +1,6 @@
 import secrets
 import string
 from passlib.handlers.bcrypt import bcrypt
-from src.auth.models import Base
-from src.database import engine
-
-
-def create_tables():
-    Base.metadata.create_all(bind=engine)
 
 
 def hash_password(password: str):

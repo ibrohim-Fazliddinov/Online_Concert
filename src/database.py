@@ -1,124 +1,201 @@
 """
-Модуль: database.py
+Модуль для работы с базой данных и сессиями SQLAlchemy.
 
-Этот модуль настраивает асинхронное подключение к PostgreSQL
-с помощью SQLAlchemy и Pydantic.
+Этот модуль предоставляет классы и функции для инициализации подключения к базе данных,
+создания асинхронных сессий и управления ими с использованием SQLAlchemy.
+
+Основные компоненты:
+- DatabaseSession: Класс для настройки подключения к базе данных и создания фабрики сессий.
+- SessionContextManager: Контекстный менеджер для управления жизненным циклом сессий.
+- get_db_session: Асинхронный генератор для получения сессии базы данных.
+
+Модуль использует асинхронные возможности SQLAlchemy для эффективной работы с базой данных
+в асинхронных приложениях.
 """
 
-from typing import Dict, Any, AsyncGenerator
-from pydantic import SecretStr, PostgresDsn
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from settings.config import Settings
-from src.common.settings import ConcertBaseSettings
+from typing import Dict, Any
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    AsyncEngine,
+    async_sessionmaker,
+    create_async_engine,
+)
+from sqlalchemy import URL
 
-SQLALCHEMY_DATABASE_URL = "postgresql://user:password@0.0.0.0:5434/postgres_db"
-"""
-Резервная строка подключения. Рекомендуется использовать `settings.db.database_url` вместо неё.
-"""
+from settings import config
 
 
-class DatabaseSettings(ConcertBaseSettings):
+class DatabaseSession:
     """
-    Pydantic-класс настроек для асинхронного подключения к PostgreSQL.
-
-    Атрибуты:
-        POSTGRES_USER (str): Имя пользователя базы данных.
-        POSTGRES_PASSWORD (SecretStr): Пароль доступа к базе данных.
-        POSTGRES_HOST (str): Адрес хоста (по умолчанию: localhost).
-        POSTGRES_PORT (int): Порт соединения (по умолчанию: 5432).
-        POSTGRES_DB (str): Название базы данных.
+    Класс для инициализации и настройки подключения к базе данных и компонентов ORM.
     """
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: SecretStr
-    POSTGRES_HOST: str = "localhost"
-    POSTGRES_PORT: int = 5432
-    POSTGRES_DB: str
 
-    @property
-    def database_dsn(self) -> PostgresDsn:
+    def __init__(self, settings: Any = config) -> None:
         """
-        Формирует DSN для подключения через asyncpg.
+        Инициализирует экземпляр DatabaseSession.
+
+        Args:
+            settings (Any): Объект конфигурации. По умолчанию используется глобальный объект settings.
+        """
+
+        self.dsn = settings.dsn
+
+    def __get_dsn(self, dsn: str) -> str:
+        """
+        Получает dsn.
+
+        Args:
+            dsn (str): url dsn.
+
+        Returns:
+            str: url dsn.
+        """
+        return dsn
+
+    def __create_dsn(self, dsn_params: Dict[str, str]) -> URL:
+        """
+        Создает объект SQLAlchemy dsn (data source name) для подключения к базе данных.
+
+        Аргументы:
+            dsn_params (Dict[str, str]): Параметры для создания dsn.
+
+            Для создания dsn необходимы следующие параметры:
+                DIALECT:             str
+                DRIVERNAME:          str
+                USERNAME:            str
+                PASSWORD:            SecretStr
+                HOST:                str
+                PORT:                int
+                NAME:                str
+
+            Эти параметры необходимо передать следующим образом:
+                @property
+                def params(self) -> Dict[str, str]:
+                    return {
+                        "drivername": f"{self.DIALECT}+{self.DRIVERNAME}",
+                        "username": self.USERNAME,
+                        "password": urllib.parse.quote_plus(self.PASSWORD.get_secret_value()),
+                        "host": self.HOST,
+                        "port": self.PORT,
+                        "database": self.NAME
+                    }
 
         Возвращает:
-            PostgresDsn: Полный DSN, включающий схему, пользователя, пароль, хост, порт и базу данных.
+            URL: Объект SQLAlchemy URL.
         """
-        return PostgresDsn.build(
-            scheme="postgresql+asyncpg",
-            username=self.POSTGRES_USER,
-            password=self.POSTGRES_PASSWORD.get_secret_value(),
-            host=self.POSTGRES_HOST,
-            port=self.POSTGRES_PORT,
-            path=f"/{self.POSTGRES_DB}",
+        dsn = URL.create(**dsn_params)
+
+        return dsn
+
+    def __create_async_engine(self, dsn: str) -> AsyncEngine:
+        """
+        Создает асинхронный движок SQLAlchemy.
+
+        Args:
+            dsn (str): Строка подключения к базе данных.
+            engine_params (Dict[str, bool]): Параметры для создания движка.
+
+        Returns:
+            AsyncEngine: Асинхронный движок SQLAlchemy.
+        """
+        async_engine = create_async_engine(dsn, echo=True)
+
+        return async_engine
+
+    def __precreate_async_session_factory(
+        self, async_engine: AsyncEngine
+    ) -> AsyncSession:
+        """
+        Предварительно создает фабрику асинхронных сессий для операций с базой данных.
+
+        Args:
+            async_engine (AsyncEngine): Асинхронный движок SQLAlchemy.
+            sessionmaker_params (Dict[str, Any]): Параметры для создания сессии.
+
+        Returns:
+            AsyncSession: Фабрика асинхронных сессий.
+        """
+        async_session_factory = async_sessionmaker(
+            autocommit=False,
+            autoflush=False,
+            expire_on_commit=False,
+            class_=AsyncSession,
+            bind=async_engine,
         )
+        return async_session_factory
 
-    @property
-    def database_url(self) -> str:
+    def create_async_session_factory(self) -> AsyncSession:
         """
-        Получение строки подключения к базе данных для синхронных инструментов (например, Alembic).
+        Создает настроенную фабрику сессий.
 
-        Возвращает:
-            str: URL подключения к базе данных.
+        Returns:
+            AsyncSession: Фабрика асинхронных сессий.
         """
-        return str(self.database_dsn)
 
-    @property
-    def engine_params(self) -> Dict[str, Any]:
-        """
-        Параметры при создании SQLAlchemy Engine.
+        dsn = self.__get_dsn(self.dsn)
 
-        Возвращает:
-            Dict[str, Any]: Аргументы для create_async_engine (например, echo).
-        """
-        return {"echo": True}
+        async_engine = self.__create_async_engine(dsn)
 
-    @property
-    def session_params(self) -> Dict[str, Any]:
-        """
-        Параметры при создании асинхронной сессии SQLAlchemy.
+        session_factory = self.__precreate_async_session_factory(async_engine)
 
-        Возвращает:
-            Dict[str, Any]: Аргументы для async_sessionmaker
-                (autocommit, autoflush, expire_on_commit, класс сессии).
-        """
-        return {
-            "autocommit": False,
-            "autoflush": False,
-            "expire_on_commit": False,
-            "class_": AsyncSession,
-        }
+        return session_factory
 
 
-# Создание глобального экземпляра настроек
-settings = Settings()
-"""
-Глобальный экземпляр настроек приложения.
-"""
-
-# Инициализация асинхронного движка SQLAlchemy
-engine = create_async_engine(
-    settings.db.database_url,
-    **settings.db.engine_params,
-)
-"""
-Асинхронный движок SQLAlchemy для работы с БД.
-"""
-
-# Фабрика асинхронных сессий
-SessionLocal = async_sessionmaker(
-    bind=engine,
-    **settings.db.session_params
-)
-"""
-Фабрика для создания экземпляров AsyncSession.
-"""
-
-
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
+class SessionContextManager:
     """
-    Зависимость для FastAPI, возвращающая сессию БД.
-
-    Возвращает:
-        AsyncSession: Сессия базы данных для текущего запроса.
+    Контекстный менеджер для управления сессиями базы данных.
     """
-    async with SessionLocal() as session:
-        yield session
+
+    def __init__(self) -> None:
+        """
+        Инициализирует экземпляр SessionContextManager.
+        """
+        self.db_session = DatabaseSession(config)
+        self.session_factory = self.db_session.create_async_session_factory()
+        self.session = None
+
+    async def __aenter__(self) -> "SessionContextManager":
+        """
+        Асинхронный метод входа в контекстный менеджер.
+
+        Returns:
+            SessionContextManager: Экземпляр текущего контекстного менеджера.
+        """
+        self.session = self.session_factory()
+        return self
+
+    async def __aexit__(self, *args: object) -> None:
+        """
+        Асинхронный метод выхода из контекстного менеджера.
+
+        Args:
+            *args: Аргументы, передаваемые при выходе из контекста.
+        """
+        await self.rollback()
+
+    async def commit(self) -> None:
+        """
+        Асинхронно фиксирует изменения в базе данных и закрывает сессию.
+        """
+        await self.session.commit()
+        await self.session.close()
+        self.session = None
+
+    async def rollback(self) -> None:
+        """
+        Асинхронно откатывает изменения в базе данных и закрывает сессию.
+        """
+        await self.session.rollback()
+        await self.session.close()
+        self.session = None
+
+
+async def get_db_session():
+    """
+    Асинхронный генератор для получения сессии базы данных.
+
+    Yields:
+        AsyncSession: Асинхронная сессия базы данных.
+    """
+    async with SessionContextManager() as session_manager:
+        yield session_manager.session

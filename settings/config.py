@@ -4,9 +4,12 @@
 Этот модуль настраивает глобальные параметры приложения
 с использованием Pydantic BaseSettings.
 """
+from pydantic import SecretStr
 from pydantic_settings import SettingsConfigDict
+from settings.path import PathSettings
 from src.common.settings import ConcertBaseSettings
-from src.database import DatabaseSettings
+
+env_file_path, app_env = PathSettings.get_env_file_and_type()
 
 class Settings(ConcertBaseSettings):
     """
@@ -25,26 +28,10 @@ class Settings(ConcertBaseSettings):
     HOST: str = "0.0.0.0"
     PORT: str = "8000"
 
-    @property
-    def db(self) -> DatabaseSettings:
-        """
-        Создает экземпляр DatabaseSettings
-        на основе переменных окружения.
-
-        Возвращает:
-            DatabaseSettings: Конфигурация для подключения к БД.
-        """
-        return DatabaseSettings(
-            user=self.POSTGRES_USER,
-            password=self.POSTGRES_PASSWORD,
-            host=self.POSTGRES_HOST,
-            port=self.POSTGRES_PORT,
-            db=self.POSTGRES_DB,
-            echo=True,
-            pool_size=10,
-        )
 
     model_config = SettingsConfigDict(
-        **ConcertBaseSettings.model_config,
-        extra="allow"
+        # **ConcertBaseSettings.model_config,
+        env_file=env_file_path,
+        env_prefix="POSTGRES_",
+        extra="ignore"
     )

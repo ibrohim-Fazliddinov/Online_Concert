@@ -15,7 +15,8 @@ common_settings.py
         - `case_sensitive`: нечувствительность к регистру имён переменных.
 """
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from src.common.env_file import env_file
+
+from settings.path import PathSettings
 
 
 class ConcertBaseSettings(BaseSettings):
@@ -28,7 +29,7 @@ class ConcertBaseSettings(BaseSettings):
         case_sensitive (bool): регистр имён переменных окружения не учитывается.
     """
     model_config = SettingsConfigDict(
-        env_file=env_file,
+        env_file=PathSettings.get_env_file_and_type(),
         env_file_encoding="utf-8",
         case_sensitive=False,
     )
