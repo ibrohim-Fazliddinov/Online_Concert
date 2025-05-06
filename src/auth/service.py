@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 from src.auth.enum import UserRoles
 from src.auth.exception import credentials_exception
 from src.auth.schemas import UserBase, UserRegister, UserCreate
-from src.database import get_db
 import logging
 
 log = logging.getLogger(__name__)

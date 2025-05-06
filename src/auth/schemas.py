@@ -26,7 +26,7 @@ class UserLogin(ConcertBase):
 class UserRegister(UserLogin):
     """Схема для запроса регистрации пользователя."""
 
-    password: Optional[str] = None
+    password:  str | None
 
     @field_validator("password")
     def password_required(cls, value: Any) -> str:
@@ -38,7 +38,7 @@ class UserRegister(UserLogin):
 class UserLoginResponse(ConcertBase):
     """Схема для ответа при авторизации пользователя (с токеном)."""
 
-    token: Optional[str] = None
+    token: str | None
 
 
 class UserRead(UserBase):
@@ -73,10 +73,11 @@ class UserCreate(ConcertBase):
     email: EmailStr
     phone_number: str
     password: str
-    role: Optional[str] = None
+    role: str | None
 
 
 class UserRegisterResponse(ConcertBase):
     """Схема для ответа при регистрации пользователя (с токеном)."""
 
-    token: Optional[str] = None
+    access_token: str | None
+    refresh_token: str | None

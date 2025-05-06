@@ -1,3 +1,23 @@
+"""
+password_utils.py
+
+Модуль содержит утилиты для работы с паролями:
+    - hash_password: хеширует пароль с использованием bcrypt.
+    - generate_password: генерирует случайный пароль заданной длины по критериям безопасности.
+
+Пример использования:
+
+    from src.common.password_utils import hash_password, generate_password
+
+    # Хеширование пароля
+    hashed = hash_password("MySecret123")
+    print(hashed)
+
+    # Генерация случайного пароля
+    pwd = generate_password()
+    print(pwd)
+"""
+
 import secrets
 import string
 from passlib.handlers.bcrypt import bcrypt
@@ -51,6 +71,26 @@ def hash_password(password: str):
 
 
 def generate_password():
+    """
+    Генерирует случайный пароль, соответствующий критериям безопасности:
+      - Длина: 10 символов.
+      - Минимум одна строчная буква.
+      - Минимум одна заглавная буква.
+      - Минимум три цифры.
+
+    Пароль состоит из букв латинского алфавита и цифр.
+    Функция повторяет генерацию, пока не выполняются все условия.
+
+    Возвращает:
+    - str: Сгенерированная строка пароля.
+
+    Пример:
+    >>> pwd = generate_password()
+    >>> len(pwd) == 10
+    True
+    >>> sum(c.isdigit() for c in pwd) >= 3
+    True
+    """
     alphanumeric = string.ascii_letters + string.digits
     while True:
         password = "".join(secrets.choice(alphanumeric) for i in range(10))

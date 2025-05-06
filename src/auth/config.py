@@ -1,9 +1,9 @@
 """
 auth/config.py
 
-Модуль содержит Pydantic-модели для конфигурации модуля аутентификации.
+Модуль содержит Pydantic-модели для настройки и валидации конфигурации аутентификации.
 Переменные загружаются из файла окружения, путь к которому определяется через PathSettings.
-Все поля корректно типизируются и проходят валидацию.
+Все поля корректно типизируются и проходят валидацию благодаря Pydantic и BaseSettings.
 
 Пример использования:
 
@@ -21,13 +21,19 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from src.common.settings import ConcertBaseSettings
 
 
-
 class BaseAuthConfigSetting(ConcertBaseSettings):
+    """
+    Базовый класс настроек аутентификации.
 
+    Наследует `ConcertBaseSettings` и устанавливает префикс для переменных окружения:
+        - env_prefix: "AUTH_"
+    Это позволяет загружать все переменные окружения, начинающиеся с AUTH_.
+    """
     model_config = SettingsConfigDict(
         **ConcertBaseSettings.model_config,
         env_prefix="AUTH_",
     )
+
 
 class OAuthProviderSettings(ConcertBaseSettings):
     """
@@ -36,11 +42,11 @@ class OAuthProviderSettings(ConcertBaseSettings):
     Атрибуты:
         client_id (str): Идентификатор приложения у провайдера.
         client_secret (SecretStr): Секретный ключ клиента (будет скрыт в логах).
-        auth_url (AnyUrl): URL для перенаправления пользователя за кодом авторизации.
-        token_url (AnyUrl): URL для обмена кода на токен доступа.
-        user_info_url (AnyUrl): URL для получения информации о пользователе по access_token.
+        auth_url (str): URL для перенаправления пользователя за кодом авторизации.
+        token_url (str): URL для обмена кода на токен доступа.
+        user_info_url (str): URL для получения информации о пользователе по access_token.
         scope (str): Запрашиваемые права доступа (space-separated).
-        callback_url (AnyUrl): URL-обработчик редиректа после авторизации.
+        callback_url (str): URL-обработчик редиректа после авторизации.
 
     Все поля загружаются из переменных окружения с префиксом AUTH_OAUTH_GOOGLE__* при использовании в AuthSettings.
     """
@@ -51,6 +57,7 @@ class OAuthProviderSettings(ConcertBaseSettings):
     user_info_url: str
     scope: str
     callback_url: str
+
 
 class AuthSettings(BaseAuthConfigSetting):
     """
@@ -78,13 +85,9 @@ class AuthSettings(BaseAuthConfigSetting):
         AUTH_SENDER_EMAIL (str): Email отправителя.
         AUTH_SMTP_USERNAME (str): Логин для SMTP.
         AUTH_SMTP_PASSWORD (SecretStr): Пароль для SMTP.
-
     """
-
-    # Базовый URL для auth-эндпоинтов
     AUTH_URL: str = "/api/auth"
 
-    # JWT
     AUTH_TOKEN_TYPE: str = "Bearer"
     AUTH_TOKEN_EXPIRE_MINUTES: int = 1440
     AUTH_VERIFICATION_TOKEN_EXPIRE_MINUTES: int = 1440
@@ -92,20 +95,22 @@ class AuthSettings(BaseAuthConfigSetting):
     AUTH_TOKEN_SECRET_KEY: SecretStr
     AUTH_USER_INACTIVE_TIMEOUT: int = 900
 
-    # SMTP
     AUTH_SMTP_SERVER: str = "gmail.smtp"
     AUTH_SMTP_PORT: int = 587
     AUTH_SENDER_EMAIL: str = "noreply@gmail.com"
     AUTH_SMTP_USERNAME: str = "your_username"
     AUTH_SMTP_PASSWORD: SecretStr
 
-    # Pydantic configuration
-
 
 class OAut2Settings(BaseAuthConfigSetting):
-    # OAuth
+    """
+    Дополнительные OAuth-настройки.
+
+    Атрибуты:
+        AUTH_OAUTH_SUCCESS_REDIRECT_URI (str): URI для успешного редиректа после OAuth.
+        AUTH_OAUTH_CALLBACK_BASE_URL (str): Базовый URL для колбэков OAuth.
+        AUTH_OAUTH_GOOGLE (OAuthProviderSettings): Конфигурация Google OAuth-провайдера.
+    """
     AUTH_OAUTH_SUCCESS_REDIRECT_URI: str
     AUTH_OAUTH_CALLBACK_BASE_URL: str
     AUTH_OAUTH_GOOGLE: OAuthProviderSettings
-
-    # Pydantic configuration
