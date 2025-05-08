@@ -1,10 +1,8 @@
 from pydantic.types import conint, constr
 from pydantic import BaseModel, ConfigDict
 
-
 PrimaryKey = conint(gt=0, lt=2147483647)
 NameStr = constr(regex=r"^(?!\s*$).+", strip_whitespace=True, min_length=3)
-
 
 
 class ConcertBase(BaseModel):
@@ -15,11 +13,10 @@ class ConcertBase(BaseModel):
     """
 
     model_config = ConfigDict(
-        from_attributes=True,  # Разрешает использование атрибутов модели для создания экземпляра
+        from_attributes=True,  # Разрешает использование атрибутов модели для создания экземпляра | вместо orm_mode:
         validate_assignment=True,  # Включает валидацию при присваивании значений
         arbitrary_types_allowed=True,  # Разрешает использование произвольных типов данных
     )
-
 
 class Pagination(ConcertBase):
     """

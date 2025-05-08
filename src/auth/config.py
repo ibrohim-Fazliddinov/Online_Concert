@@ -19,6 +19,7 @@ auth/config.py
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from src.common.settings import ConcertBaseSettings
+from src.auth import constants as const
 
 
 class BaseAuthConfigSetting(ConcertBaseSettings):
@@ -88,12 +89,13 @@ class AuthSettings(BaseAuthConfigSetting):
     """
     AUTH_URL: str = "/api/auth"
 
-    AUTH_TOKEN_TYPE: str = "Bearer"
-    AUTH_TOKEN_EXPIRE_MINUTES: int = 1440
-    AUTH_VERIFICATION_TOKEN_EXPIRE_MINUTES: int = 1440
-    AUTH_TOKEN_ALGORITHM: str = "HS256"
-    AUTH_TOKEN_SECRET_KEY: SecretStr
-    AUTH_USER_INACTIVE_TIMEOUT: int = 900
+    AUTH_TOKEN_TYPE: str = const.AUTH_TOKEN_TYPE
+    AUTH_TOKEN_EXPIRE_MINUTES: int = const.AUTH_TOKEN_EXPIRE_MINUTE
+    AUTH_VERIFICATION_TOKEN_EXPIRE_MINUTES: int = const.AUTH_VERIFICATION_TOKEN_EXPIRE_MINUTES
+    AUTH_TOKEN_ALGORITHM: str = const.AUTH_TOKEN_ALGORITHM
+    AUTH_TOKEN_SECRET_KEY: SecretStr = const.AUTH_TOKEN_SECRET_KEY
+    AUTH_USER_INACTIVE_TIMEOUT: int = const.AUTH_USER_INACTIVE_TIMEOUT
+
 
     AUTH_SMTP_SERVER: str = "gmail.smtp"
     AUTH_SMTP_PORT: int = 587

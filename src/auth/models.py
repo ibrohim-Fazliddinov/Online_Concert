@@ -1,16 +1,16 @@
 from sqlalchemy import String, LargeBinary, Enum
 from sqlalchemy.orm import mapped_column, Mapped
 from src.auth.enum import UserRoles
+from src.auth.mixin import AuditMixin
 from src.common.model import Base
 
 
-class User(Base):
+class User(Base, AuditMixin):
     """
     Модель пользователя в системе.
 
     Этот класс представляет пользователя и его данные в базе данных. Он содержит информацию
-    о пользователе, такую как имя, фамилия, email, телефон и пароль. Также в классе реализованы
-    методы для установки и проверки пароля, а также для генерации JWT токенов.
+    о пользователе, такую как имя, фамилия, email, телефон и пароль.
 
     Атрибуты:
         id (int): Уникальный идентификатор пользователя.
