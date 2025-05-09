@@ -1,57 +1,56 @@
 from typing import Optional
-import jwt
-from fastapi.params import Depends
-from fastapi.security.oauth2 import OAuth2PasswordBearer
-from jose.exceptions import JWTError
-from sqlalchemy.orm import Session
-from src.auth.enum import UserRoles
-from src.auth.exception import credentials_exception
-from src.auth.schemas import UserBase, UserRegister, UserCreate
-import logging
-
-log = logging.getLogger(__name__)
+from fastapi import HTTPException, status
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from src.auth.models import User
+from src.auth.schemas import UserRead
+from src.auth.utils import hash_password, verify_password
 
 
-def get_user_by_email(*, db_session, email: str) -> Optional[UserBase]:
-    """Возвращает пользователя по email или None, если не найден."""
-    return db_session.query(UserBase).filter(UserBase.email == email).one_or_none()
+class UserService:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_user_by_email(self, email: str) -> Optional[User]:
+        result = await self.session.execute(
+            select(User).where(User.email == email)
+        )
+        return result.scalar_one_or_none()
+
+    async def create_user(self, name: str, email: str, hashed_password: str) -> User:
+        user = User(first_name=name, email=email, password=hashed_password)
+        async with self.session.begin():
+            self.session.add(user)
+        await self.session.refresh(user)
+        return user
+
+    async def register_user(self, name: str, email: str, password: str) -> UserRead:
+        if await self.get_user_by_email(email):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already exists"
+            )
+        hashed = hash_password(password)
+        try:
+            orm_user = await self.create_user(name, email, hashed)
+        except IntegrityError:
+            # если уникальность всё же нарушилась на уровне БД
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already exists"
+            )
+
+        # Pydantic v2: конвертация из ORM-модели
+        return UserRead.model_validate(orm_user)
+
+    async def authenticate_user(self, email: str, password: str) -> User:
+        user = await self.get_user_by_email(email)
+        if not user or not verify_password(password, user.password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password"
+            )
+        return user
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
-SECRET_KEY = None
-ALGORITHM = None
-def verify_token(token: str) -> str:
-    """Декодирует JWT и возвращает email из payload.sub."""
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email = payload.get("sub")
-        if email is None:
-            raise JWTError()
-        return email
-    except JWTError as e:
-        log.warning("JWT decode failed: %s", e)
-        raise credentials_exception
-
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> UserBase:
-    email = verify_token(token)
-    user = get_user_by_email(db_session=db, email=email)
-    if not user:
-        raise credentials_exception
-    return user
-
-
-
-def create_u(*, db_session, user_in: (UserRegister | UserCreate)) -> UserBase:
-    password = bytes(user_in.password, 'utf-8')
-
-    user = UserBase(
-        **user_in.model_dump(exclude={"password", "role"}), password=password
-    )
-
-    role = UserRoles.client
-    if hasattr(user_in, "role"):
-        role = user_in.role
-
-    db_session.add(user)
-    db_session.commit()
-    return user

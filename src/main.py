@@ -1,10 +1,19 @@
 from fastapi import FastAPI
-from contextlib import  asynccontextmanager
-
-from src.common.model import Base
 
 app = FastAPI()
 
-@app.get("/")
-async def hello_world():
-    return {"message": "HELLO WORLD"}
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        "src.app:app",     # или "main:app", или "src.auth_app:app"
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+    )

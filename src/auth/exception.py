@@ -6,3 +6,4 @@ credentials_exception = HTTPException(
         detail="Invalid authentication credentials",
         headers={"WWW-Authenticate": "Bearer"},
 )
+

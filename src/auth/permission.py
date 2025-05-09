@@ -26,7 +26,7 @@ from fastapi import HTTPException
 from starlette.requests import Request
 from starlette.status import HTTP_403_FORBIDDEN
 from src.auth.enum import UserRoles
-from src.auth.service import get_current_user
+from src.auth.security import get_current_user
 
 
 class BasePermission(ABC):
