@@ -1,7 +1,7 @@
 from starlette.requests import Request
 
 
-class PermissionDependency:
+class PermissionDependency(object):
 
     def __init__(self, permission_classes: list):
         """

@@ -1,10 +1,12 @@
 from fastapi import FastAPI
 
+from src.auth.route import user_route
+
 app = FastAPI()
 
 
-
-
+app.include_router(user_route, prefix="",             # или "/api" — по вашему усмотрению
+    tags=["auth"])
 
 
 
