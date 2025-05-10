@@ -26,7 +26,6 @@ from fastapi import HTTPException
 from starlette.requests import Request
 from starlette.status import HTTP_403_FORBIDDEN
 from src.auth.enum import UserRoles
-from src.auth.security import AuthSecurity
 
 
 class BasePermission(ABC):
@@ -69,7 +68,7 @@ class BasePermission(ABC):
         Raises:
             HTTPException: если пользователь не имеет необходимых прав.
         """
-        self.user = AuthSecurity.get_current_user(request)
+        self.user = None
 
         if not self.has_required_permission(request):
             raise HTTPException(status_code=self.error_code, detail=self.error_message)
@@ -121,3 +120,7 @@ class AnonymousPermission(BasePermission):
         Возвращает True, если пользователь не прошёл аутентификацию.
         """
         return self.user is None
+
+
+class IsAuthenticatedPermission(BasePermission):
+    pass

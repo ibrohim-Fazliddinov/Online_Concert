@@ -22,7 +22,7 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy import URL
 
-from settings import config
+from settings.config import settings
 
 
 class DatabaseSession:
@@ -30,7 +30,7 @@ class DatabaseSession:
     Класс для инициализации и настройки подключения к базе данных и компонентов ORM.
     """
 
-    def __init__(self, settings: Any = config) -> None:
+    def __init__(self, settings_obj=settings) -> None:
         """
         Инициализирует экземпляр DatabaseSession.
 
@@ -38,7 +38,7 @@ class DatabaseSession:
             settings (Any): Объект конфигурации. По умолчанию используется глобальный объект settings.
         """
 
-        self.dsn = settings.dsn
+        self.dsn = settings_obj.dsn
 
     def __get_dsn(self, dsn: str) -> str:
         """
@@ -150,7 +150,7 @@ class SessionContextManager:
         """
         Инициализирует экземпляр SessionContextManager.
         """
-        self.db_session = DatabaseSession(config)
+        self.db_session = DatabaseSession(settings)
         self.session_factory = self.db_session.create_async_session_factory()
         self.session = None
 

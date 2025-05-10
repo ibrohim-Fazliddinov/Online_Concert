@@ -20,7 +20,6 @@ utils.py
 
 import secrets
 import string
-
 from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -68,3 +67,6 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     Возвращает True, если они совпадают.
     """
     return pwd_context.verify(plain_password, hashed_password)
+
+
+

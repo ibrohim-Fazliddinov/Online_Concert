@@ -2,10 +2,10 @@ from sqlalchemy import String, LargeBinary, Enum
 from sqlalchemy.orm import mapped_column, Mapped
 from src.auth.enum import UserRoles
 from src.auth.mixin import AuditMixin
-from src.common.model import Base
+from src.common.model import BaseConcertModel
 
 
-class User(Base, AuditMixin):
+class User(BaseConcertModel, AuditMixin):
     """
     Модель пользователя в системе.
 
@@ -20,15 +20,19 @@ class User(Base, AuditMixin):
         phone_number (str): Номер телефона пользователя, уникальный.
         password (bytes): Захешированный пароль пользователя.
     """
-    __tablename__ = "user_account"
-    __table_args__ = {"schema": "user_core"}
+    __tablename__ = "user"
+    # __table_args__ = {"schema": "user_core"}
 
     first_name: Mapped[str] = mapped_column(String(50))
     second_name: Mapped[str] = mapped_column(String(50))
     email: Mapped[str] = mapped_column(String(100), unique=True)
     phone_number: Mapped[str] = mapped_column(String(20), unique=True)
-    role: Mapped[UserRoles] = mapped_column(Enum(UserRoles), default=UserRoles.client)
-    password: Mapped[str] = mapped_column(LargeBinary)
+    role: Mapped[UserRoles] = mapped_column(
+        Enum(UserRoles, name="userroles", create_type=True),
+        default=UserRoles.client,
+        nullable=False,
+    )
+    password: Mapped[str] = mapped_column(String(1000))
 
 
 

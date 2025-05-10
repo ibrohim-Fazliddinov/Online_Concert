@@ -32,4 +32,5 @@ class ConcertBaseSettings(BaseSettings):
         env_file=PathSettings.get_env_file_and_type(),
         env_file_encoding="utf-8",
         case_sensitive=False,
+        use_enum_values=True,
     )

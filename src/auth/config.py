@@ -15,12 +15,14 @@ auth/config.py
     print(google_conf.client_id)
 
 """
+import inspect
 
 from pydantic import SecretStr
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import SettingsConfigDict
 from src.common.settings import ConcertBaseSettings
 from src.auth import constants as const
 
+# print(inspect.signature(SettingsConfigDict))
 
 class BaseAuthConfigSetting(ConcertBaseSettings):
     """
@@ -32,7 +34,6 @@ class BaseAuthConfigSetting(ConcertBaseSettings):
     """
     model_config = SettingsConfigDict(
         **ConcertBaseSettings.model_config,
-        env_prefix="AUTH_",
     )
 
 
@@ -90,10 +91,10 @@ class AuthSettings(BaseAuthConfigSetting):
     AUTH_URL: str = "/api/auth"
 
     AUTH_TOKEN_TYPE: str = const.AUTH_TOKEN_TYPE
-    AUTH_TOKEN_EXPIRE_MINUTES: int = const.AUTH_TOKEN_EXPIRE_MINUTE
+    AUTH_TOKEN_EXPIRE_MINUTES: int = const.AUTH_ACCESS_TOKEN_EXPIRE_MINUTE
     AUTH_VERIFICATION_TOKEN_EXPIRE_MINUTES: int = const.AUTH_VERIFICATION_TOKEN_EXPIRE_MINUTES
     AUTH_TOKEN_ALGORITHM: str = const.AUTH_TOKEN_ALGORITHM
-    AUTH_TOKEN_SECRET_KEY: SecretStr = const.AUTH_TOKEN_SECRET_KEY
+    AUTH_TOKEN_SECRET_KEY: SecretStr
     AUTH_USER_INACTIVE_TIMEOUT: int = const.AUTH_USER_INACTIVE_TIMEOUT
 
 
@@ -116,3 +117,4 @@ class OAut2Settings(BaseAuthConfigSetting):
     AUTH_OAUTH_SUCCESS_REDIRECT_URI: str
     AUTH_OAUTH_CALLBACK_BASE_URL: str
     AUTH_OAUTH_GOOGLE: OAuthProviderSettings
+

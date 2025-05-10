@@ -1,10 +1,14 @@
+from datetime import datetime, timedelta
 from typing import Optional
-from fastapi import HTTPException, status
-from sqlalchemy.exc import IntegrityError
+
+import jwt
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+
+from src.auth.constants import AUTH_ACCESS_TOKEN_EXPIRE_MINUTE, AUTH_TOKEN_ALGORITHM
 from src.auth.models import User
-from src.auth.schemas import UserRead
+from src.auth.schemas import UserRead, UserCreate
 from src.auth.utils import hash_password, verify_password
 
 
@@ -18,39 +22,28 @@ class UserService:
         )
         return result.scalar_one_or_none()
 
-    async def create_user(self, name: str, email: str, hashed_password: str) -> User:
-        user = User(first_name=name, email=email, password=hashed_password)
-        async with self.session.begin():
-            self.session.add(user)
+    async def get_user_by_phone(self, phone: str) -> Optional[User]:
+        result = await self.session.execute(
+            select(User).where(User.phone_number == phone)
+        )
+        return result.scalar_one_or_none()
+
+    async def create_user(self, user_data: UserCreate) -> User:
+        # model_dump возвращает dict с полями схемы без служебных
+        payload = user_data.model_dump(exclude={"password"})
+        # создаём ORM-экземпляр
+        user = User(**payload)
+        # хэшируем пароль
+        user.password = hash_password(user_data.password)
+
+        self.session.add(user)
+        await self.session.commit()
+        # чтобы получить автоматически сгенерённые id, timestamps и т.п.
         await self.session.refresh(user)
         return user
 
-    async def register_user(self, name: str, email: str, password: str) -> UserRead:
-        if await self.get_user_by_email(email):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already exists"
-            )
-        hashed = hash_password(password)
-        try:
-            orm_user = await self.create_user(name, email, hashed)
-        except IntegrityError:
-            # если уникальность всё же нарушилась на уровне БД
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already exists"
-            )
-
-        # Pydantic v2: конвертация из ORM-модели
-        return UserRead.model_validate(orm_user)
-
-    async def authenticate_user(self, email: str, password: str) -> User:
-        user = await self.get_user_by_email(email)
-        if not user or not verify_password(password, user.password):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect email or password"
-            )
-        return user
-
-
+    async def create_access_token(self, data: dict) -> str:
+        to_encode = data.copy()
+        expire = datetime.timestamp(datetime.now()) + AUTH_ACCESS_TOKEN_EXPIRE_MINUTE * 86400
+        to_encode.update({"exp": expire, "sub": data.get("sub")})
+        return jwt.encode(to_encode, 'goo', algorithm=AUTH_TOKEN_ALGORITHM)

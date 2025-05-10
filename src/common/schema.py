@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic.types import conint, constr
 from pydantic import BaseModel, ConfigDict
 
@@ -5,7 +7,7 @@ PrimaryKey = conint(gt=0, lt=2147483647)
 # NameStr = constr(regex=r"^(?!\s*$).+", strip_whitespace=True, min_length=3)
 
 
-class ConcertBase(BaseModel):
+class ConcertBaseSchema(BaseModel):
     """
     Базовая модель для всех Pydantic моделей.
     Используется для наследования общих настроек для всех моделей, таких как валидация при присваивании
@@ -18,7 +20,22 @@ class ConcertBase(BaseModel):
         arbitrary_types_allowed=True,  # Разрешает использование произвольных типов данных
     )
 
-class Pagination(ConcertBase):
+
+class BaseConcertResponseSchema(ConcertBaseSchema):
+    message: str | None
+    success: bool
+
+class BaseConcertRequestSchema(ConcertBaseSchema):
+
+    def to_dict(self) -> dict[str, Any]:
+        """
+        Возвращает всю модель в виде Python-словаря.
+        По умолчанию берёт сырые атрибуты, без экстра фильтров.
+        """
+        return self.model_dump()
+
+
+class Pagination(ConcertBaseSchema):
     """
     Модель для пагинации.
     Используется для определения структуры данных, связанных с пагинацией в API,

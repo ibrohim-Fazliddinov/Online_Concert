@@ -21,7 +21,7 @@ def resolve_attr(obj, attr, default=None):
         return default
 
 
-class Base(DeclarativeBase):
+class BaseConcertModel(DeclarativeBase):
         """Base class for all SQLAlchemy models."""
         __repr_attrs__ = []
         __repr_max_length__ = 15

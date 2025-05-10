@@ -1,11 +1,16 @@
 # PYDANTIC MODELS
-from typing import Optional, Any, Literal
-from pydantic import BaseModel, EmailStr, field_validator
+from typing import  Any, Literal
+from uuid import UUID
+
+from pydantic import EmailStr, field_validator
+from pydantic.v1 import UUID1
+
+from src.auth.enum import UserRoles
 from src.auth.utils import hash_password, generate_password
-from src.common.schema import ConcertBase
+from src.common.schema import ConcertBaseSchema, BaseConcertResponseSchema, BaseConcertRequestSchema
 
 
-class UserBase(ConcertBase):
+class UserBase(ConcertBaseSchema):
     """Базовая схема пользователя с личными данными."""
 
     first_name: str
@@ -13,10 +18,7 @@ class UserBase(ConcertBase):
     email: EmailStr
     phone_number: str
 
-    # TODO: добавить валидацию email и phone_number
-
-
-class UserCreate(ConcertBase):
+class UserCreate(BaseConcertRequestSchema):
     """Схема для создания нового пользователя."""
 
     first_name: str
@@ -24,36 +26,36 @@ class UserCreate(ConcertBase):
     email: EmailStr
     phone_number: str
     password: str
-    role: str | None
+    role: UserRoles | None
 
 
 class UserRead(UserBase):
     """Схема для чтения информации о пользователе."""
 
-    id: int
+    id: UUID
 
 
-class UserUpdate(ConcertBase):
+class UserUpdate(BaseConcertRequestSchema):
     first_name:  str | None
     last_name: str | None
     phone_number: str | None
     email: EmailStr | None
 
 
-class UserLogin(ConcertBase):
+class UserLogin(BaseConcertRequestSchema):
     """Схема для запроса авторизации пользователя."""
 
     email: EmailStr
     password: str
 
 
-class UserLoginResponse(ConcertBase):
+class UserLoginResponse(BaseConcertResponseSchema):
     """Схема для ответа при авторизации пользователя (с токеном)."""
 
     access_token: str | None
 
 
-class UserRegister(UserLogin):
+class UserRegister(UserBase, BaseConcertRequestSchema):
     """Схема для запроса регистрации пользователя."""
 
     password: str | None
@@ -65,23 +67,23 @@ class UserRegister(UserLogin):
         return hash_password(password)
 
 
-class UserRegisterResponse(ConcertBase):
+class UserRegisterResponse(BaseConcertResponseSchema):
     """Схема для ответа при регистрации пользователя (с токеном)."""
 
     access_token: str | None
     refresh_token: str | None
 
 
-class PasswordResetRequest(ConcertBase):
+class PasswordResetRequest(BaseConcertRequestSchema):
     email: EmailStr
 
 
-class PasswordResetConfirm(ConcertBase):
+class PasswordResetConfirm(BaseConcertRequestSchema):
     token: str
     new_password: str
 
 
-class UserPasswordUpdate(ConcertBase):
+class UserPasswordUpdate(BaseConcertRequestSchema):
     """Схема для запроса на обновление пароля пользователя."""
 
     current_password: str
@@ -99,16 +101,16 @@ class UserPasswordUpdate(ConcertBase):
         return value
 
 
-class TokenData(ConcertBase):
+class TokenResponseData(BaseConcertResponseSchema):
     access_token:  str
-    refresh_token: str
+    # refresh_token: str
     token_type:    Literal["bearer"] = "bearer"
-    expires_in:    int
+    # expires_in:    int
 
 
-class TokenRefreshRequest(ConcertBase):
+class TokenRefreshRequest(BaseConcertRequestSchema):
     refresh_token: str
 
-
-class TokenRefreshResponse(TokenData):
-    ...
+#
+# class TokenRefreshResponse(TokenData):
+#     ...
